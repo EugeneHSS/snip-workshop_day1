@@ -129,6 +129,58 @@ For a bundled process already listening on a test origin, run
 `node scripts/smoke-test.mjs --url http://127.0.0.1:3000`. This creates test links.
 Set `BUN_EXECUTABLE` to an absolute Bun executable if Bun is not on PATH.
 
+## CI and image promotion
+
+- **Build bundle** runs hourly at minute 17 (UTC cron) and on manual dispatch,
+  intentionally not on source pushes. It checks out `main`, collects remote source
+  tips, verifies the assembled bundle, and pushes changed Git commits as the bot.
+- **Build and push image** runs for `main` pushes changing the `bundle` gitlink
+  or its own workflow file, plus manual dispatch. The path filter is `bundle`,
+  not `bundle/**`. It checks out pinned submodules recursively, never remote tips.
+
+Bot pushes made with `GITHUB_TOKEN` do not start another push workflow. After a
+changed scheduled build, a separate `actions: write` job explicitly dispatches
+the image workflow on `main`. An unchanged bundle creates neither commits nor an
+image-workflow dispatch. Bundle writing has only `contents: write`; validation
+jobs have read access; only the final promotion job gets `packages: write`.
+All third-party Actions are pinned to immutable commit SHAs.
+
+The image workflow checks source provenance and byte identity, runs frontend and
+CLI tests, and smoke-tests the bundled API and static assets. `npm audit` rejects
+high/critical dependency advisories. A digest-pinned Bun base, non-root Docker
+candidate, API health check, and Trivy high/critical image scan are separate
+checks; a clean OS scan does not clear frontend dependency findings.
+
+**No candidate image artifact is uploaded and no GHCR login/push occurs unless
+all tests and both security gates pass.** When allowed, promotion loads the exact
+scanned image rather than rebuilding it, then tags
+`ghcr.io/eugenehss/snip-workshop_day1:latest` and `:sha-<short-main-sha>`.
+Those names describe the configured future outputs, not images already published.
+
+After an approved successful publication:
+
+```sh
+docker run --rm -p 3000:3000 ghcr.io/eugenehss/snip-workshop_day1:latest
+```
+
+GHCR packages can initially be private; package visibility is a separate account
+setting, not a reason to bypass release checks.
+
+## Deployment readiness
+
+The generated `railway.json` selects the Dockerfile builder and `/api/links`
+health check. No Railway service or deployment is created by these workflows.
+Deployment is blocked by the same security decision as image publication.
+
+When a release is cleared, prefer deploying the verified immutable image digest;
+do not enable automatic deployment directly from `bundle` while release gates
+are failing. `main` is a superproject, not a standalone application build context.
+Bind the service to its assigned `PORT` and make the public target port match it.
+Set `BASE_URL` to the HTTPS public origin, or use `RAILWAY_PUBLIC_DOMAIN`.
+Verify UI creation, CLI listing, redirects, hits, logs and health before promotion.
+Roll back to the previous verified image digest on failure; memory-only link data
+cannot be recovered by code rollback.
+
 ## Release security decision
 
 The user explicitly chose **keep Angular 19; block image publishing** while
