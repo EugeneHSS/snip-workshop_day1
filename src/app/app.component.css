@@ -1,0 +1,35 @@
+:host { display: block; }
+main { max-width: 62rem; margin: auto; padding: 3rem 1.25rem; }
+header { margin-bottom: 2rem; }
+h1 { margin: .5rem 0; font-size: clamp(2.2rem, 6vw, 3.75rem); letter-spacing: -.05em; }
+h2 { margin: 0 0 1.25rem; font-size: 1.25rem; }
+header > p:last-child, .hint { color: #4b5563; }
+.eyebrow { color: #3150aa; font-size: .8rem; font-weight: 700; letter-spacing: .12em; }
+.card { background: white; border: 1px solid #d5dce7; border-radius: 1rem; padding: 1.5rem; margin: 1.25rem 0; }
+label { font-weight: 650; }
+.hint { font-size: .9rem; line-height: 1.5; }
+.form-row { display: flex; gap: .75rem; }
+input { width: 100%; min-width: 0; border: 1px solid #687386; border-radius: .5rem; padding: .8rem; color: inherit; background: white; }
+input[aria-invalid="true"] { border-color: #b42318; }
+button { border: 1px solid #253e8c; border-radius: .5rem; padding: .8rem 1rem; background: #253e8c; color: white; font-weight: 650; cursor: pointer; white-space: nowrap; }
+button:disabled { opacity: .65; cursor: wait; }
+button:hover:not(:disabled) { background: #1c2f6d; }
+.secondary { color: #253e8c; background: white; }
+.secondary:hover:not(:disabled) { background: #edf1ff; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.section-heading h2 { margin: 0; }
+.error { color: #a51d14; overflow-wrap: anywhere; }
+.success { padding: 1rem; border-radius: .5rem; background: #eef6ef; color: #174b2c; overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; border-radius: .35rem; }
+table { border-collapse: collapse; width: 100%; text-align: left; }
+th, td { padding: 1rem .75rem; border-bottom: 1px solid #d5dce7; vertical-align: top; }
+th { font-size: .85rem; background: #f4f6fb; }
+.original { overflow-wrap: anywhere; min-width: 10rem; }
+.hits { text-align: right; font-variant-numeric: tabular-nums; }
+.empty { padding: 1.5rem 0; color: #4b5563; }
+@media (max-width: 36rem) {
+  main { padding: 1.5rem .75rem; }
+  .card { padding: 1rem; }
+  .form-row { flex-direction: column; }
+  th, td { padding: .75rem .5rem; }
+}
