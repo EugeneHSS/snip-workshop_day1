@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { cpSync, existsSync, lstatSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, lstatSync, rmSync, writeFileSync } from "node:fs";
 import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -79,7 +79,7 @@ write("package.json", `${JSON.stringify({
   name: "snip-bundle", version: "1.0.0", private: true,
   scripts: { start: "bun server.js" },
 }, null, 2)}\n`);
-write("Dockerfile", `FROM oven/bun:1-alpine
+write("Dockerfile", `FROM oven/bun:1-alpine@sha256:4cf82f5686b196504fe119db3fcd9185b191f82ece82c40680e597228ec6070a
 WORKDIR /app
 COPY --chown=bun:bun . .
 ENV PORT=3000 PUBLIC_DIR=./public
@@ -96,7 +96,7 @@ write("railway.json", `${JSON.stringify({
 }, null, 2)}\n`);
 write("sources.json", `${JSON.stringify({
   ...revisions,
-  frontendLockSha256: createHash("sha256").update(readFileSync(join(frontend, "package-lock.json"))).digest("hex"),
+  frontendLockSha256: createHash("sha256").update(execFileSync("git", ["show", "HEAD:package-lock.json"], { cwd: frontend })).digest("hex"),
 }, null, 2)}\n`);
 write("README.md", `# Generated Snip bundle
 
