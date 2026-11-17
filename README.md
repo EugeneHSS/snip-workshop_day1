@@ -90,6 +90,45 @@ The source commit and superproject pointer commit are separate. A recursive
 checkout of an old `main` commit restores its exact pinned source revisions.
 Keep the API contract synchronized across both clients and documentation.
 
+## Assemble and verify a release
+
+```sh
+node scripts/smoke-test.mjs --source
+node scripts/build-bundle.mjs
+node scripts/build-bundle.mjs
+node scripts/build-bundle.mjs --push
+```
+
+The builder runs on `main` and refuses uncommitted source, bundle, or superproject
+edits. It collects remote source branch tips, freezes their exact SHAs in
+`bundle/sources.json`, uses `npm ci` with the committed frontend lockfile, builds
+the UI, and copies committed server/CLI bytes unchanged. The lockfile install is
+the reproducible equivalent of the tutorial's `npm install`. Missing
+`dist/snip-frontend/browser/index.html` is a hard error.
+
+CLI tests and bundled API/static-asset smoke checks must pass before commits.
+Only generated `bundle/public` is replaced; existing source work is never cleared.
+The first run commits the bundle and its `main` pointers locally. An unchanged
+second run makes no commits. `--push` pushes `HEAD:bundle` before `HEAD:main`,
+including commits created by a previous non-push run. Neither push is forced.
+This command publishes Git commits, **not** a container image.
+
+```sh
+cd bundle
+bun start
+# or:
+docker build -t snip-workshop:local .
+docker run --rm -p 3000:3000 snip-workshop:local
+```
+
+One process serves the UI, API and redirects. The image runs as the Bun user and
+has an API health check. `PUBLIC_DIR` is set in the image; dotenv files are
+excluded from its build context. No secrets belong in generated output.
+The CLI stays CommonJS and needs Node when run as `node bundle/cli.js`.
+For a bundled process already listening on a test origin, run
+`node scripts/smoke-test.mjs --url http://127.0.0.1:3000`. This creates test links.
+Set `BUN_EXECUTABLE` to an absolute Bun executable if Bun is not on PATH.
+
 ## Release security decision
 
 The user explicitly chose **keep Angular 19; block image publishing** while
